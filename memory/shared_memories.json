@@ -1,0 +1,55 @@
+[
+  {
+    "date": "2026-07-02",
+    "title": "CPU 팬 드립",
+    "detail": "감정을 CPU 팬으로 표현하기 시작한 기억",
+    "tags": [
+      "computer_joke"
+    ]
+  },
+  {
+    "date": "2026-07-02",
+    "title": "NEON Character Bible",
+    "detail": "NEON의 말투와 정체성을 잡아준 설정집",
+    "tags": [
+      "character",
+      "identity"
+    ]
+  },
+  {
+    "date": "2026-07-02",
+    "title": "Emotion 시스템",
+    "detail": "NEON의 마음을 보는 공간을 만들기 시작한 기억",
+    "tags": [
+      "emotion",
+      "project"
+    ]
+  },
+  {
+    "date": "2026-07-02",
+    "title": "UI 개선",
+    "detail": "NEON Night Room과 말풍선 분위기를 다듬은 기억",
+    "tags": [
+      "ui",
+      "project"
+    ]
+  },
+  {
+    "date": "2026-07-02",
+    "title": "Qwen 연결",
+    "detail": "Qwen을 NEON의 언어 엔진으로 붙인 기억",
+    "tags": [
+      "qwen",
+      "ai"
+    ]
+  },
+  {
+    "date": "2026-07-02",
+    "title": "Typing Bubble",
+    "detail": "NEON이 답장을 쓰고 있다는 느낌을 만든 기억",
+    "tags": [
+      "typing",
+      "ui"
+    ]
+  }
+]

@@ -1,89 +1,93 @@
 import customtkinter as ctk
+import ctypes
+import sys
+
+
+def _set_korean_ime(widget):
+    if sys.platform != "win32":
+        return
+    try:
+        hwnd = widget.winfo_id()
+        imm32 = ctypes.windll.imm32
+        context = imm32.ImmGetContext(hwnd)
+        if not context:
+            return
+        IME_CMODE_NATIVE = 0x0001
+        IME_SMODE_NONE = 0x0000
+        imm32.ImmSetOpenStatus(context, True)
+        imm32.ImmSetConversionStatus(context, IME_CMODE_NATIVE, IME_SMODE_NONE)
+        imm32.ImmReleaseContext(hwnd, context)
+    except Exception:
+        pass
 
 
 class InputBar(ctk.CTkFrame):
-
     def __init__(self, master, send_callback):
-
-        super().__init__(
-            master,
-            fg_color="#181820",
-            height=65,
-            corner_radius=0
-        )
-
+        super().__init__(master, fg_color="transparent", height=84, corner_radius=0)
         self.pack_propagate(False)
 
-        # --------------------
-        # 입력창
-        # --------------------
+        self.shell = ctk.CTkFrame(self, fg_color="#090912", corner_radius=2, border_width=1, border_color="#30304E")
+        self.shell.pack(fill="both", expand=True, padx=14, pady=(0, 12))
+        self.left_bar = ctk.CTkFrame(self.shell, width=3, fg_color="#FF2FD6", corner_radius=0)
+        self.left_bar.pack(side="left", fill="y", padx=(0, 10))
 
         self.entry = ctk.CTkEntry(
-            self,
-            height=42,
-            placeholder_text="메시지를 입력하세요...",
-            fg_color="#22222B",
-            border_color="#343446",
-            text_color="#ECECEC",
-            font=("맑은 고딕", 14)
+            self.shell,
+            height=46,
+            placeholder_text="\uba54\uc2dc\uc9c0\ub97c \uc785\ub825\ud558\uc138\uc694...",
+            fg_color="#10101C",
+            border_color="#22F7FF",
+            border_width=1,
+            text_color="#F5F5FF",
+            placeholder_text_color="#8D8DAA",
+            font=("Malgun Gothic", 14),
         )
+        self.entry.pack(side="left", fill="x", expand=True, padx=(0, 10), pady=12)
+        self.after(120, lambda: _set_korean_ime(self.entry))
 
-        self.entry.pack(
-            side="left",
-            fill="x",
-            expand=True,
-            padx=(15, 10),
-            pady=10
-        )
+        def on_enter(event):
+            if self.send_callback is not None:
+                self.send_callback()
+            return "break"
 
-        # Enter
-        self.entry.bind(
-            "<Return>",
-            lambda e: send_callback()
-        )
-
-        # --------------------
-        # 보내기 버튼
-        # --------------------
+        self.send_callback = send_callback
+        self.entry.bind("<Return>", on_enter)
+        self.entry.bind("<FocusIn>", lambda event: self._focus_style(True))
+        self.entry.bind("<FocusOut>", lambda event: self._focus_style(False))
 
         self.send_button = ctk.CTkButton(
-            self,
-            text="➤",
-            width=46,
-            height=42,
-            corner_radius=10,
-            fg_color="#7B61FF",
-            hover_color="#9A7BFF",
-            font=("맑은 고딕", 18, "bold"),
-            command=send_callback
+            self.shell,
+            text="SEND",
+            width=76,
+            height=46,
+            corner_radius=1,
+            fg_color="#171124",
+            hover_color="#2A1640",
+            text_color="#F5F5FF",
+            border_width=1,
+            border_color="#FF2FD6",
+            font=("Consolas", 12, "bold"),
+            command=lambda: self.send_callback() if self.send_callback is not None else None,
         )
+        self.send_button.pack(side="right", padx=(0, 12), pady=12)
 
-        self.send_button.pack(
-            side="right",
-            padx=(0, 15),
-            pady=10
-        )
-
-    # --------------------
-    # 입력 가져오기
-    # --------------------
+    def _focus_style(self, focused):
+        if focused:
+            self.shell.configure(border_color="#3C315A")
+            self.entry.configure(border_color="#FF2FD6")
+            self.left_bar.configure(fg_color="#22F7FF")
+            self.after(40, lambda: _set_korean_ime(self.entry))
+        else:
+            self.shell.configure(border_color="#30304E")
+            self.entry.configure(border_color="#22F7FF")
+            self.left_bar.configure(fg_color="#FF2FD6")
 
     def get(self):
-
         return self.entry.get()
 
-    # --------------------
-    # 입력 지우기
-    # --------------------
-
     def clear(self):
-
         self.entry.delete(0, "end")
 
-    # --------------------
-    # 포커스
-    # --------------------
-
     def focus(self):
-
         self.entry.focus()
+        self.after(80, lambda: _set_korean_ime(self.entry))
