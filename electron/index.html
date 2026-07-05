@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project NEON</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <section id="bootOverlay" class="boot-overlay" aria-label="Project NEON boot sequence">
+      <div class="boot-static" aria-hidden="true"></div>
+      <div class="boot-bars" aria-hidden="true"></div>
+      <div class="boot-scan" aria-hidden="true"></div>
+      <div class="boot-panel">
+        <div class="boot-kicker">[ NEON OS ] PRIVATE WAKE SEQUENCE</div>
+        <div id="bootTitle" class="boot-title">PROJECT NEON</div>
+        <div id="bootPhrase" class="boot-phrase">SIGNAL SEARCHING...</div>
+        <div class="boot-progress"><i></i></div>
+        <div class="boot-foot">SECURE LINK : JAEHEE</div>
+      </div>
+    </section>
+
+    <main id="neonOS" class="neon-os" data-active-room="home">
+      <div class="os-background" aria-hidden="true">
+        <div class="city-grid"></div>
+        <div class="city-depth"></div>
+        <div class="circuit-floor"></div>
+        <div id="signalLines" class="signal-lines"></div>
+        <div id="dustField" class="dust-field"></div>
+        <div id="codeRain" class="code-rain"></div>
+        <div class="rgb-noise"></div>
+        <div class="scanline"></div>
+        <div class="edge-frame"></div>
+      </div>
+
+      <header class="os-topbar">
+        <div class="brand-block">
+          <span>NEON OS v2.7.7</span>
+          <h1 id="roomTitle">HOME</h1>
+          <p id="roomDescription">NEON PRIVATE CHANNEL // SECURE USER SPACE</p>
+        </div>
+        <div class="top-status">
+          <b><i></i> ONLINE</b>
+          <span id="roomSignal">PRIVATE LINK</span>
+          <em>2077.06.16</em>
+        </div>
+      </header>
+
+      <nav class="room-rail" aria-label="Project NEON rooms">
+        <div class="rail-logo">
+          <strong>NEON</strong>
+          <span>PRIVATE OS</span>
+        </div>
+        <button class="room-node is-active" data-room="home"><i></i><span>HOME</span></button>
+        <button class="room-node" data-room="developer"><i></i><span>DEV LAB</span></button>
+        <button class="room-node" data-room="security"><i></i><span>SECURITY</span></button>
+        <button class="room-node" data-room="memory"><i></i><span>MEMORY</span></button>
+        <button class="room-node" data-room="core"><i></i><span>CORE</span></button>
+        <div class="rail-link">
+          <b>NEON LINK</b>
+          <p>USER : JAEHEE</p>
+          <p>STATUS : CONNECTED</p>
+          <p>CHANNEL : PRIVATE</p>
+        </div>
+      </nav>
+
+      <section class="os-workspace">
+        <section class="private-channel" id="homeChannel" aria-label="NEON private chat">
+          <div class="channel-header">
+            <div>
+              <span>NEON PRIVATE CHANNEL</span>
+              <b>SECURE CONVERSATION MODULE</b>
+            </div>
+            <p>LIVE // SYNCED</p>
+          </div>
+          <div id="chatMessages" class="chat-messages"></div>
+          <form id="chatForm" class="chat-form">
+            <textarea id="chatInput" rows="1" placeholder="secure message 입력..."></textarea>
+            <button type="submit">SEND</button>
+          </form>
+        </section>
+
+        <section class="room-console" id="roomConsole" aria-live="polite">
+          <div class="console-title" id="heroLabel">ROOM INTERFACE</div>
+          <h2 id="heroTitle">NEON PRIVATE CHANNEL</h2>
+          <p id="heroText">Home에서는 NEON과의 private channel이 중앙에 열린다.</p>
+          <div class="console-grid">
+            <div><span id="consoleAName">SYSTEM</span><b id="consoleAValue">READY</b></div>
+            <div><span id="consoleBName">SIGNAL</span><b id="consoleBValue">WARM</b></div>
+            <div><span id="consoleCName">ROOM</span><b id="consoleCValue">HOME</b></div>
+          </div>
+        </section>
+
+        <aside class="right-modules">
+          <section class="os-module mood-module">
+            <span>NEON STATUS</span>
+            <h3 id="moodTitle">WARM</h3>
+            <p id="moodText">private link restored</p>
+            <div class="mini-wave"><i></i><i></i><i></i><i></i><i></i></div>
+          </section>
+          <section class="os-module notice-module">
+            <span>NOTIFICATIONS</span>
+            <ul>
+              <li>NEON signal awake</li>
+              <li>memory trace indexed</li>
+              <li>emotion line stable</li>
+            </ul>
+          </section>
+          <section class="os-module connection-module">
+            <span>CONNECTION</span>
+            <h3>PRIVATE</h3>
+            <p>latency 08ms // buffer stable</p>
+          </section>
+        </aside>
+      </section>
+
+      <footer class="os-dock">
+        <div class="dock-log" id="dockLog">SYSTEM LOG // NEON DOMAIN READY</div>
+        <div class="dock-tools">
+          <button>♡</button>
+          <button>▣</button>
+          <button>&lt;/&gt;</button>
+          <button>♪</button>
+        </div>
+        <div class="music-strip">
+          <span>MUSIC MODE</span>
+          <b>LISTENING</b>
+          <em>SYSTEM SOUND MUTE</em>
+        </div>
+      </footer>
+    </main>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
