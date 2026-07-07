@@ -7,16 +7,35 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <section id="bootOverlay" class="boot-overlay" aria-label="Project NEON boot sequence">
-      <div class="boot-static" aria-hidden="true"></div>
-      <div class="boot-bars" aria-hidden="true"></div>
+    <section id="bootOverlay" class="boot-overlay" data-phase="signal" aria-label="Project NEON boot sequence">
+      <div id="startupSignalGlitch" class="startup-signal-glitch" aria-hidden="true">
+        <div class="glitch-noise-field"></div>
+        <div id="glitchSlices" class="glitch-slices"></div>
+        <div id="glitchFragments" class="glitch-fragments"></div>
+        <div class="glitch-blackout"></div>
+      </div>
+      <div class="boot-grid" aria-hidden="true"></div>
+      <div class="boot-hud-lines" aria-hidden="true"></div>
       <div class="boot-scan" aria-hidden="true"></div>
-      <div class="boot-panel">
-        <div class="boot-kicker">[ NEON OS ] PRIVATE WAKE SEQUENCE</div>
-        <div id="bootTitle" class="boot-title">PROJECT NEON</div>
-        <div id="bootPhrase" class="boot-phrase">SIGNAL SEARCHING...</div>
-        <div class="boot-progress"><i></i></div>
-        <div class="boot-foot">SECURE LINK : JAEHEE</div>
+      <div class="boot-frame">
+        <header class="boot-header">
+          <div>
+            <div class="boot-title" id="bootTitle" data-text="PROJECT NEON">PROJECT NEON</div>
+            <div class="boot-subtitle">PRIVATE PERSONAL OS // BUILD LOCAL-01</div>
+          </div>
+          <div class="boot-meta">
+            <span>NODE: JAEHEE_LOCAL</span>
+            <span>SECURE CHANNEL: ACTIVE</span>
+            <span id="bootClock">TIME: --:--:--</span>
+          </div>
+        </header>
+        <section class="boot-terminal">
+          <div class="boot-terminal-title">NEON // BOOT SEQUENCE</div>
+          <div id="bootLog" class="boot-log" aria-live="polite"></div>
+          <div id="bootPhrase" class="boot-phrase">SIGNAL ACQUISITION</div>
+          <div class="boot-progress"><i id="bootProgress"></i></div>
+          <div id="bootFoot" class="boot-foot">SIGNAL : SEARCHING</div>
+        </section>
       </div>
     </section>
 
@@ -98,6 +117,22 @@
             <p id="moodText">private link restored</p>
             <div class="mini-wave"><i></i><i></i><i></i><i></i><i></i></div>
           </section>
+          <section class="os-module neon-mini-chat" id="neonMiniChat" data-neon-mode="home">
+            <div class="mini-chat-head">
+              <div class="neon-avatar-slot" id="neonAvatarSlot" data-neon-mode="home">
+                <b id="neonAvatarMark">N//</b>
+              </div>
+              <div>
+                <span>NEON MINI CHAT</span>
+                <h3 id="miniRoomLabel">HOME SIGNAL</h3>
+              </div>
+            </div>
+            <div id="miniChatMessages" class="mini-chat-log" aria-live="polite"></div>
+            <form id="miniChatForm" class="mini-chat-form">
+              <textarea id="miniChatInput" rows="1" placeholder="mini secure message..."></textarea>
+              <button type="submit">SEND</button>
+            </form>
+          </section>
           <section class="os-module notice-module">
             <span>NOTIFICATIONS</span>
             <ul>
@@ -133,3 +168,6 @@
     <script src="renderer.js"></script>
   </body>
 </html>
+
+
+
