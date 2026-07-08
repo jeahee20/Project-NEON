@@ -21,7 +21,7 @@
         <header class="boot-header">
           <div>
             <div class="boot-title" id="bootTitle" data-text="PROJECT NEON">PROJECT NEON</div>
-            <div class="boot-subtitle">PRIVATE PERSONAL OS // BUILD LOCAL-01</div>
+            <div class="boot-subtitle">AI OPERATING SYSTEM // SIGNAL RECOVERY</div>
           </div>
           <div class="boot-meta">
             <span>NODE: JAEHEE_LOCAL</span>
@@ -30,7 +30,7 @@
           </div>
         </header>
         <section class="boot-terminal">
-          <div class="boot-terminal-title">NEON // BOOT SEQUENCE</div>
+          <div class="boot-terminal-title">[ SIGNAL ]  NEON WAKE SEQUENCE</div>
           <div id="bootLog" class="boot-log" aria-live="polite"></div>
           <div id="bootPhrase" class="boot-phrase">SIGNAL ACQUISITION</div>
           <div class="boot-progress"><i id="bootProgress"></i></div>
@@ -108,6 +108,75 @@
             <div><span id="consoleBName">SIGNAL</span><b id="consoleBValue">WARM</b></div>
             <div><span id="consoleCName">ROOM</span><b id="consoleCValue">HOME</b></div>
           </div>
+          <section class="security-scan-panel" id="securityScanPanel" aria-label="Local sandbox signal scan">
+            <div class="security-scan-status">
+              <b>LOCAL SANDBOX STATUS</b>
+              <div class="security-status-grid">
+                <span>LOCAL SANDBOX : <em id="securitySandboxState">ONLINE</em></span>
+                <span>EXTERNAL TARGET : <em>BLOCKED</em></span>
+                <span>NEON SAFE SERVER : <em>ONLINE</em></span>
+                <span>TRAINING MODE : <em id="securityTrainingState">READY</em></span>
+                <span>FIREWALL : <em>WATCHING</em></span>
+                <span>SIGNAL TRACE : <em id="securityTraceState">CLEAN</em></span>
+              </div>
+            </div>
+            <button type="button" class="signal-scan-button" id="signalScanButton">[ SIGNAL SCAN ]</button>
+            <div class="security-result-line" id="securityScanResult">SCAN RESULT : STANDBY</div>
+            <div class="security-log" id="securityScanLog" aria-live="polite"></div>
+          </section>
+          <section class="security-mission-card" id="ghostGateCard" aria-label="Ghost Gate mission ticket">
+            <div class="mission-ticket-mark">MISSION 001</div>
+            <div class="mission-ticket-main">
+              <span>GHOST GATE</span>
+              <b>RAIN SECTOR // LOWER NET CHECKPOINT</b>
+              <p>Rain Sector의 오래된 체크포인트가 입력 신호와 명령 경계선을 헷갈리고 있다. 재희님은 안전한 로컬 시뮬레이션 안에서 위험한 입력 모양만 확인한다.</p>
+            </div>
+            <div class="mission-ticket-meta">
+              <span>LOCAL ONLY</span>
+              <span>NO EXTERNAL TARGET</span>
+              <span>SIGNAL STAYS INSIDE NEON</span>
+              <span>SAFE ROUTE OPEN</span>
+            </div>
+            <button type="button" class="rain-sector-button" id="descendRainSectorButton">[ DESCEND TO RAIN SECTOR ]</button>
+          </section>
+
+          <section class="ghost-gate-panel" id="ghostGatePanel" aria-label="Ghost Gate local simulation">
+            <header class="ghost-gate-header">
+              <div>
+                <span>ISOLATED LOCAL SIMULATION</span>
+                <h3>GHOST GATE // RAIN SECTOR CHECKPOINT</h3>
+              </div>
+              <p>NO REAL DATABASE // NO EXTERNAL TARGET // SIGNAL STAYS INSIDE NEON</p>
+            </header>
+            <div class="ghost-gate-inputs">
+              <label>
+                <span>USERNAME SIGNAL</span>
+                <input id="ghostUsername" type="text" autocomplete="off" spellcheck="false" placeholder="username signal" />
+              </label>
+              <label>
+                <span>PASSWORD SIGNAL</span>
+                <input id="ghostPassword" type="text" autocomplete="off" spellcheck="false" placeholder="password signal" />
+              </label>
+              <button type="button" id="sendGhostSignalButton">[ SEND SIGNAL ]</button>
+              <div class="ghost-gate-status" id="ghostGateStatus">GATE STATUS : STANDBY</div>
+              <div class="ghost-gate-light" id="ghostGateLight" data-signal="standby"></div>
+            </div>
+            <div class="ghost-gate-side">
+              <div class="ghost-trace-box">
+                <b>TRACE FEED</b>
+                <div class="ghost-trace-feed" id="ghostTraceFeed"></div>
+              </div>
+              <div class="ghost-analysis-box">
+                <b>NEON ANALYSIS</b>
+                <p id="ghostAnalysis">Rain Sector route is quiet. 입력 신호를 보내면 NEON이 경계선을 확인한다.</p>
+              </div>
+            </div>
+            <footer class="ghost-gate-metrics">
+              <span>GATE PULSE : <em id="ghostGatePulseMetric">IDLE</em></span>
+              <span>SIGNAL BOUNDARY : <em id="ghostSignalBoundaryMetric">SEALED</em></span>
+              <span>SAFE MODE : <em id="ghostSafeModeMetric">ON</em></span>
+            </footer>
+          </section>
         </section>
 
         <aside class="right-modules">
@@ -168,6 +237,7 @@
     <script src="renderer.js"></script>
   </body>
 </html>
+
 
 
 

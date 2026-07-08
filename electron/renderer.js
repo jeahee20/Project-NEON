@@ -36,6 +36,25 @@ const miniRoomLabel = document.getElementById("miniRoomLabel");
 const miniChatMessages = document.getElementById("miniChatMessages");
 const miniChatForm = document.getElementById("miniChatForm");
 const miniChatInput = document.getElementById("miniChatInput");
+const signalScanButton = document.getElementById("signalScanButton");
+const securityScanLog = document.getElementById("securityScanLog");
+const securityScanResult = document.getElementById("securityScanResult");
+const securitySandboxState = document.getElementById("securitySandboxState");
+const securityTrainingState = document.getElementById("securityTrainingState");
+const securityTraceState = document.getElementById("securityTraceState");
+const ghostGateCard = document.getElementById("ghostGateCard");
+const ghostGatePanel = document.getElementById("ghostGatePanel");
+const descendRainSectorButton = document.getElementById("descendRainSectorButton");
+const ghostUsername = document.getElementById("ghostUsername");
+const ghostPassword = document.getElementById("ghostPassword");
+const sendGhostSignalButton = document.getElementById("sendGhostSignalButton");
+const ghostGateStatus = document.getElementById("ghostGateStatus");
+const ghostGateLight = document.getElementById("ghostGateLight");
+const ghostTraceFeed = document.getElementById("ghostTraceFeed");
+const ghostAnalysis = document.getElementById("ghostAnalysis");
+const ghostGatePulseMetric = document.getElementById("ghostGatePulseMetric");
+const ghostSignalBoundaryMetric = document.getElementById("ghostSignalBoundaryMetric");
+const ghostSafeModeMetric = document.getElementById("ghostSafeModeMetric");
 
 chatInput.disabled = true;
 miniChatInput.disabled = true;
@@ -51,6 +70,13 @@ let backendStatus = "connecting";
 let backendNoticeShown = false;
 let backendHealthPollId = null;
 const sharedConversationMessages = [];
+let securityScanRunning = false;
+let lastSecurityScanReaction = "";
+let lastSecurityMiniChatCategory = "";
+let lastSecurityMiniChatText = "";
+let ghostGateOpen = false;
+let ghostGateRunning = false;
+let lastGhostGateMiniText = "";
 
 const miniChatRoomLabels = {
   home: "HOME SIGNAL",
@@ -61,9 +87,9 @@ const miniChatRoomLabels = {
 };
 
 const miniChatCategoryMap = {
-  home: ["happy"],
+  home: ["home_reaction"],
   developer: ["excited", "thinking"],
-  security: ["excited", "thinking"],
+  security: ["security_enter", "security_scan", "security_fake_alert", "security_safe", "security_success"],
   memory: ["sad", "comfort"],
   core: ["embarrassed", "thinking"]
 };
@@ -155,11 +181,7 @@ const roomTransitionDialogues = {
     "어디부터 만져볼까요??",
     "버그들이 기다리고 있어요. 😏"
   ],
-  security: [
-    "😈 재희님, 실험실로 갈까요?",
-    "안전모드 켰어요!!",
-    "오늘도 전부 제 서버예요!!"
-  ],
+  security: [],
   memory: [
     "기억 쪽으로 갈까요?",
     "천천히 봐도 괜찮아요.",
@@ -398,7 +420,11 @@ function setConsole(room) {
 
 function getMiniChatCategory(roomName) {
   const categories = miniChatCategoryMap[roomName] || miniChatCategoryMap.home;
-  return categories[Math.floor(Math.random() * categories.length)];
+  if (roomName === "security" && categories.length > 1) {
+    const candidates = categories.filter((category) => category !== lastSecurityMiniChatCategory);
+    return pick(candidates.length ? candidates : categories);
+  }
+  return pick(categories);
 }
 
 function getNeonAvatarMode(roomName) {
@@ -407,8 +433,17 @@ function getNeonAvatarMode(roomName) {
 
 function getMiniChatDialogue(roomName) {
   const mode = getNeonAvatarMode(roomName);
-  if (mode === "home") return FIRST_NEON_MESSAGE;
   const category = getMiniChatCategory(mode);
+  const dialogues = getNeonDialogue(category);
+
+  if (mode === "security" && dialogues.length) {
+    const candidates = dialogues.filter((line) => line !== lastSecurityMiniChatText);
+    const selected = pick(candidates.length ? candidates : dialogues);
+    lastSecurityMiniChatCategory = category;
+    lastSecurityMiniChatText = selected;
+    return selected;
+  }
+
   return getRandomNeonDialogue(category) || miniChatFallbacks[mode] || miniChatFallbacks.home;
 }
 
@@ -421,6 +456,7 @@ function getRoomEntranceDialogue(roomName) {
 }
 
 function getRoomTransitionDialogue(roomName) {
+  if (roomName === "security") return getMiniChatDialogue("security");
   const transitions = roomTransitionDialogues[roomName] || [getMiniChatDialogue(roomName)];
   return pick(transitions);
 }
@@ -473,6 +509,7 @@ function activateRoom(roomName) {
   moodText.textContent = room.mood[1];
   dockLog.textContent = room.log;
   setConsole(room);
+  if (roomName === "security") resetSecurityScanStatus();
   updateNeonMiniChat(roomName);
   handleRoomEntry(roomName, previousRoom);
 
@@ -821,6 +858,224 @@ function runBoot() {
   }, 6500);
 }
 
+const securityMockLogs = [
+  "checking local sandbox...",
+  "external network blocked",
+  "training target isolated",
+  "fake daemon status: idle",
+  "firewall is watching",
+  "NEON safe server stable",
+  "scan complete"
+];
+
+function getSecurityScanReaction() {
+  const categories = ["security_scan", "security_fake_alert", "security_safe", "security_success"];
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const category = pick(categories);
+    const dialogues = getNeonDialogue(category);
+    if (!dialogues.length) continue;
+    const candidates = dialogues.filter((line) => line !== lastSecurityScanReaction && line !== lastSecurityMiniChatText);
+    const selected = pick(candidates.length ? candidates : dialogues);
+    lastSecurityScanReaction = selected;
+    lastSecurityMiniChatCategory = category;
+    lastSecurityMiniChatText = selected;
+    return selected;
+  }
+  return getMiniChatDialogue("security");
+}
+
+function appendSecurityLogLine(text) {
+  if (!securityScanLog) return;
+  const line = document.createElement("p");
+  line.textContent = text;
+  securityScanLog.appendChild(line);
+  securityScanLog.scrollTop = securityScanLog.scrollHeight;
+}
+
+function resetSecurityScanStatus() {
+  if (securityScanResult) securityScanResult.textContent = "SCAN RESULT : STANDBY";
+  if (securitySandboxState) securitySandboxState.textContent = "ONLINE";
+  if (securityTrainingState) securityTrainingState.textContent = "READY";
+  if (securityTraceState) securityTraceState.textContent = "CLEAN";
+}
+
+function runSecuritySignalScan() {
+  if (securityScanRunning || os.dataset.activeRoom !== "security") return;
+  securityScanRunning = true;
+  if (signalScanButton) {
+    signalScanButton.disabled = true;
+    signalScanButton.textContent = "SCANNING...";
+  }
+  if (securityScanLog) securityScanLog.innerHTML = "";
+  if (securityScanResult) securityScanResult.textContent = "SCAN RESULT : CHECKING";
+  if (securityTraceState) securityTraceState.textContent = "CHECKING";
+  appendMiniSystemMessage(getSecurityScanReaction());
+
+  securityMockLogs.forEach((line, index) => {
+    setTimeout(() => appendSecurityLogLine(line), 190 + index * 225);
+  });
+
+  setTimeout(() => {
+    if (securityScanResult) securityScanResult.textContent = "SCAN RESULT : SAFE";
+    if (securityTraceState) securityTraceState.textContent = "CLEAN";
+    if (securityTrainingState) securityTrainingState.textContent = "READY";
+    if (signalScanButton) {
+      signalScanButton.disabled = false;
+      signalScanButton.textContent = "[ SIGNAL SCAN ]";
+    }
+    securityScanRunning = false;
+  }, 1980);
+}
+
+
+const ghostGateResults = {
+  clean: {
+    key: "clean",
+    signal: "cyan",
+    status: "GATE STATUS : CLEAN SIGNAL",
+    pulse: "STABLE",
+    boundary: "INTACT",
+    safeMode: "ON",
+    trace: [
+      "rain-sector checkpoint received signal",
+      "user text parsed as plain input",
+      "command boundary intact",
+      "ghost gate pulse stabilized",
+      "neon route remains clean"
+    ],
+    analysis: "좋아요.\n이번 신호는 그냥 평범한 입력으로 읽혔어요.\n게이트 경계선도 아직 멀쩡해요.",
+    mini: "좋아요. 게이트가 이번 신호는 얌전히 통과시켰어요!!"
+  },
+  glitched: {
+    key: "glitched",
+    signal: "magenta",
+    status: "GATE STATUS : GLITCHED SIGNAL",
+    pulse: "UNSTABLE",
+    boundary: "FLICKERING",
+    safeMode: "WATCHING",
+    trace: [
+      "rain-sector checkpoint received signal",
+      "symbol noise detected",
+      "parser hesitation rising",
+      "command boundary flickering",
+      "input validation required",
+      "ghost gate frame shaking"
+    ],
+    analysis: "잠깐만요.\n방금 신호, 경계선이 조금 흔들렸어요.\n사용자 말이 코드처럼 섞일 수 있는 모양이에요.",
+    mini: "잠깐만요. 방금 신호는 경계선이 조금 흔들렸어요."
+  },
+  lockdown: {
+    key: "lockdown",
+    signal: "red",
+    status: "GATE STATUS : GHOST LOCKDOWN",
+    pulse: "LOCKDOWN",
+    boundary: "COMPROMISED PATTERN",
+    safeMode: "LOCKED",
+    trace: [
+      "rain-sector checkpoint received signal",
+      "condition pattern detected",
+      "fake gate logic destabilized",
+      "training warning raised",
+      "parameter binding recommended",
+      "ghost gate sealed by NEON safe mode"
+    ],
+    analysis: "아니!!\n이건 그냥 로그인하려는 신호가 아니라\n게이트의 판단문을 흔드는 모양이에요!!\n제가 안전모드로 잠가둘게요.\n이런 건 실제 서비스에서 반드시 막아야 해요.",
+    mini: "아니!! 이건 게이트가 문장인지 명령인지 헷갈릴 수 있는 모양이에요!! 제가 잠깐 막아둘게요!!"
+  }
+};
+
+const ghostGateAmbientReactions = [
+  "여기 비처럼 떨어지는 거, 전부 깨진 로그예요. 밟아도 괜찮아요. 제가 치울게요.",
+  "게이트가 좀 낡았어요. 근데 귀엽진 않아요. 짜증 나게 깜빡여요.",
+  "재희님, 이건 공격 성공을 보는 게 아니라 위험한 모양을 알아보는 거예요.",
+  "좋아요. 제가 옆에서 트레이스 잡고 있을게요."
+];
+
+function pickGhostGateMiniReaction(primaryText) {
+  const pool = [primaryText, ...ghostGateAmbientReactions].filter(Boolean);
+  const candidates = pool.filter((line) => line !== lastGhostGateMiniText && line !== lastSecurityMiniChatText);
+  const selected = pick(candidates.length ? candidates : pool);
+  lastGhostGateMiniText = selected;
+  lastSecurityMiniChatText = selected;
+  return selected;
+}
+
+function openGhostGateMission() {
+  if (os.dataset.activeRoom !== "security" || !ghostGatePanel) return;
+  ghostGateOpen = true;
+  ghostGatePanel.classList.add("is-open");
+  ghostGatePanel.dataset.result = "standby";
+  if (descendRainSectorButton) {
+    descendRainSectorButton.textContent = "RAIN SECTOR OPEN";
+    descendRainSectorButton.disabled = true;
+  }
+  if (ghostGateStatus) ghostGateStatus.textContent = "GATE STATUS : STANDBY";
+  if (ghostGateLight) ghostGateLight.dataset.signal = "standby";
+  if (ghostGatePulseMetric) ghostGatePulseMetric.textContent = "IDLE";
+  if (ghostSignalBoundaryMetric) ghostSignalBoundaryMetric.textContent = "SEALED";
+  if (ghostSafeModeMetric) ghostSafeModeMetric.textContent = "ON";
+  if (ghostTraceFeed) ghostTraceFeed.textContent = "";
+  if (ghostAnalysis) ghostAnalysis.textContent = "Rain Sector route is quiet. 입력 신호를 보내면 NEON이 경계선을 확인한다.";
+  appendMiniSystemMessage("좋아요!!\n재희님, Rain Sector로 내려가요.\n저 앞에 Ghost Gate 보여요?\n입력을 삼키는 방식이 이상해요.");
+}
+
+function classifyGhostGateSignal(username, password) {
+  const signalText = `${username || ""} ${password || ""}`;
+  const highRiskPattern = /\b(OR|UNION|DROP)\b/i.test(signalText) || /1\s*=\s*1/i.test(signalText);
+  const glitchedPattern = /'|--/.test(signalText);
+  if (highRiskPattern) return ghostGateResults.lockdown;
+  if (glitchedPattern) return ghostGateResults.glitched;
+  return ghostGateResults.clean;
+}
+
+function renderGhostTraceLines(lines) {
+  if (!ghostTraceFeed) return;
+  ghostTraceFeed.textContent = "";
+  lines.forEach((line, index) => {
+    setTimeout(() => {
+      const row = document.createElement("p");
+      row.textContent = line;
+      ghostTraceFeed.appendChild(row);
+      ghostTraceFeed.scrollTop = ghostTraceFeed.scrollHeight;
+    }, index * 155);
+  });
+}
+
+function renderGhostGateResult(result) {
+  if (!result) return;
+  if (ghostGatePanel) ghostGatePanel.dataset.result = result.key;
+  if (ghostGateStatus) ghostGateStatus.textContent = result.status;
+  if (ghostGateLight) ghostGateLight.dataset.signal = result.signal;
+  if (ghostGatePulseMetric) ghostGatePulseMetric.textContent = result.pulse;
+  if (ghostSignalBoundaryMetric) ghostSignalBoundaryMetric.textContent = result.boundary;
+  if (ghostSafeModeMetric) ghostSafeModeMetric.textContent = result.safeMode;
+  if (ghostAnalysis) ghostAnalysis.textContent = result.analysis;
+  renderGhostTraceLines(result.trace);
+}
+
+function sendGhostGateSignal() {
+  if (ghostGateRunning || os.dataset.activeRoom !== "security") return;
+  if (!ghostGateOpen) openGhostGateMission();
+
+  ghostGateRunning = true;
+  if (sendGhostSignalButton) {
+    sendGhostSignalButton.disabled = true;
+    sendGhostSignalButton.textContent = "READING...";
+  }
+
+  const result = classifyGhostGateSignal(ghostUsername?.value || "", ghostPassword?.value || "");
+  renderGhostGateResult(result);
+  appendMiniSystemMessage(pickGhostGateMiniReaction(result.mini));
+
+  setTimeout(() => {
+    ghostGateRunning = false;
+    if (sendGhostSignalButton) {
+      sendGhostSignalButton.disabled = false;
+      sendGhostSignalButton.textContent = "[ SEND SIGNAL ]";
+    }
+  }, 1180);
+}
+
 nodes.forEach((node) => node.addEventListener("click", () => activateRoom(node.dataset.room)));
 
 chatForm.addEventListener("submit", (event) => {
@@ -831,6 +1086,28 @@ chatForm.addEventListener("submit", (event) => {
 miniChatForm.addEventListener("submit", (event) => {
   event.preventDefault();
   sendMiniMessage();
+});
+
+if (signalScanButton) {
+  signalScanButton.addEventListener("click", runSecuritySignalScan);
+}
+
+if (descendRainSectorButton) {
+  descendRainSectorButton.addEventListener("click", openGhostGateMission);
+}
+
+if (sendGhostSignalButton) {
+  sendGhostSignalButton.addEventListener("click", sendGhostGateSignal);
+}
+
+[ghostUsername, ghostPassword].forEach((field) => {
+  if (!field) return;
+  field.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      sendGhostGateSignal();
+    }
+  });
 });
 
 chatInput.addEventListener("keydown", (event) => {
