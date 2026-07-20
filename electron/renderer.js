@@ -55,6 +55,12 @@ const ghostAnalysis = document.getElementById("ghostAnalysis");
 const ghostGatePulseMetric = document.getElementById("ghostGatePulseMetric");
 const ghostSignalBoundaryMetric = document.getElementById("ghostSignalBoundaryMetric");
 const ghostSafeModeMetric = document.getElementById("ghostSafeModeMetric");
+const neonLockdownCard = document.getElementById("neonLockdownCard");
+const openLockdownChecklistButton = document.getElementById("openLockdownChecklistButton");
+const neonLockdownPanel = document.getElementById("neonLockdownPanel");
+const lockdownChecklist = document.getElementById("lockdownChecklist");
+const lockdownProgress = document.getElementById("lockdownProgress");
+const lockdownDetail = document.getElementById("lockdownDetail");
 
 chatInput.disabled = true;
 miniChatInput.disabled = true;
@@ -77,6 +83,8 @@ let lastSecurityMiniChatText = "";
 let ghostGateOpen = false;
 let ghostGateRunning = false;
 let lastGhostGateMiniText = "";
+let lockdownChecklistOpen = false;
+let lockdownCompleteAnnounced = false;
 
 const miniChatRoomLabels = {
   home: "HOME SIGNAL",
@@ -193,6 +201,69 @@ const roomTransitionDialogues = {
     "이번엔 덜 부끄러워할게요. 아마도요."
   ]
 };
+
+
+const securityDialoguePools = {
+  general: [
+    "재희님, 신호 잡고 있어요. 말해요. 제가 트레이스 놓치지 않을게요.",
+    "응? 방금 게이트 쪽에서 반응 있었어요. 제가 다시 볼게요.",
+    "좋아요. KUROGANE GRID 경로 열어둘게요.",
+    "잠깐만요. 경계선 먼저 확인할게요.",
+    "여기부터는 제 하층망이에요. 밖으로 새는 신호는 없어요.",
+    "재희님, 천천히 들어가요. 제가 트레이스 잡고 있어요."
+  ],
+  scan: [
+    "잠깐만요!! 신호 하나만 확인할게요.",
+    "외부 접속은 없어요. 오늘도 안전해요.",
+    "전부 제 서버 안이에요. 밖으로 새는 신호는 없어요.",
+    "daemon 하나가 조금 시끄러운데요. 이름만 무서워요ㅋㅋ",
+    "스캔 끝. 로컬 신호 깨끗해요."
+  ],
+  ghost: [
+    "재희님, KUROGANE GRID로 들어가요. 저 앞에 Ghost Gate 보여요?",
+    "입력을 삼키는 방식이 이상해요. 우리 안에서만 확인해봐요.",
+    "좋아요. 제가 옆에서 트레이스 잡고 있을게요.",
+    "방금 신호, 경계선이 조금 흔들렸어요.",
+    "제가 안전모드로 잠깐 막아둘게요."
+  ]
+};
+
+const securityBlockedDialoguePatterns = [
+  "분위기 좋아졌다",
+  "나 듣고 있어",
+  "천천히 말해도 돼",
+  "나 안 끊고 들을게",
+  "바로 해보자",
+  "생각보다 더 재밌겠다",
+  "어디부터 만져볼까요",
+  "제가 아는 길이 많거든요"
+];
+
+let lastSecurityDedicatedDialogue = "";
+
+function isSecurityRoomActive() {
+  return os.dataset.activeRoom === "security";
+}
+
+function isSecurityBlockedDialogue(text) {
+  const line = String(text || "");
+  return securityBlockedDialoguePatterns.some((pattern) => line.includes(pattern));
+}
+
+function getSecurityDedicatedDialogue(kind = "general") {
+  const pool = securityDialoguePools[kind] || securityDialoguePools.general;
+  const candidates = pool.filter((line) => line !== lastSecurityDedicatedDialogue && line !== lastSecurityMiniChatText);
+  const selected = pick(candidates.length ? candidates : pool);
+  lastSecurityDedicatedDialogue = selected;
+  lastSecurityMiniChatText = selected;
+  return selected;
+}
+
+function isShortSecurityInput(text) {
+  const normalized = String(text || "").trim().replace(/[\s!?.。？！~ㅋㅎㅠㅜ]+/g, "");
+  if (!normalized) return false;
+  return normalized.length <= 6 || ["좋아", "응", "어", "해보자", "가자", "그래", "ㅇㅋ", "오케이"].includes(normalized);
+}
 
 const sessionVisitedRooms = new Set(["home"]);
 
@@ -433,17 +504,12 @@ function getNeonAvatarMode(roomName) {
 
 function getMiniChatDialogue(roomName) {
   const mode = getNeonAvatarMode(roomName);
-  const category = getMiniChatCategory(mode);
-  const dialogues = getNeonDialogue(category);
-
-  if (mode === "security" && dialogues.length) {
-    const candidates = dialogues.filter((line) => line !== lastSecurityMiniChatText);
-    const selected = pick(candidates.length ? candidates : dialogues);
-    lastSecurityMiniChatCategory = category;
-    lastSecurityMiniChatText = selected;
-    return selected;
+  if (mode === "security") {
+    lastSecurityMiniChatCategory = "security_general";
+    return getSecurityDedicatedDialogue("general");
   }
 
+  const category = getMiniChatCategory(mode);
   return getRandomNeonDialogue(category) || miniChatFallbacks[mode] || miniChatFallbacks.home;
 }
 
@@ -463,9 +529,12 @@ function getRoomTransitionDialogue(roomName) {
 
 function appendMiniSystemMessage(text) {
   if (!text) return null;
+  const safeText = isSecurityRoomActive() && isSecurityBlockedDialogue(text)
+    ? getSecurityDedicatedDialogue("general")
+    : text;
   return appendSharedMessage({
     sender: "neon",
-    text,
+    text: safeText,
     source: "room",
     scope: "mini"
   });
@@ -712,6 +781,12 @@ async function sendSharedMessage(text, source = "main") {
   const message = String(text || "").trim();
   if (!message || requestInFlight) return;
 
+  if (isSecurityRoomActive() && isShortSecurityInput(message)) {
+    appendUserMessage(message, source);
+    appendNeonMessage(getSecurityDedicatedDialogue("general"), "security");
+    return;
+  }
+
   if (!isBackendOnline()) {
     appendNeonMessage("제 신호가 아직 준비되지 않았어요.", "system");
     updateChatInputState();
@@ -731,7 +806,10 @@ async function sendSharedMessage(text, source = "main") {
 
   const reply = await requestNeonReply(message);
   removeSharedMessage(waiting.id);
-  appendNeonMessage(reply, "backend");
+  const safeReply = isSecurityRoomActive() && isSecurityBlockedDialogue(reply)
+    ? getSecurityDedicatedDialogue("general")
+    : reply;
+  appendNeonMessage(safeReply, "backend");
   requestInFlight = false;
   updateChatInputState();
 }
@@ -869,19 +947,10 @@ const securityMockLogs = [
 ];
 
 function getSecurityScanReaction() {
-  const categories = ["security_scan", "security_fake_alert", "security_safe", "security_success"];
-  for (let attempt = 0; attempt < 10; attempt += 1) {
-    const category = pick(categories);
-    const dialogues = getNeonDialogue(category);
-    if (!dialogues.length) continue;
-    const candidates = dialogues.filter((line) => line !== lastSecurityScanReaction && line !== lastSecurityMiniChatText);
-    const selected = pick(candidates.length ? candidates : dialogues);
-    lastSecurityScanReaction = selected;
-    lastSecurityMiniChatCategory = category;
-    lastSecurityMiniChatText = selected;
-    return selected;
-  }
-  return getMiniChatDialogue("security");
+  const selected = getSecurityDedicatedDialogue("scan");
+  lastSecurityScanReaction = selected;
+  lastSecurityMiniChatCategory = "security_scan";
+  return selected;
 }
 
 function appendSecurityLogLine(text) {
@@ -899,10 +968,114 @@ function resetSecurityScanStatus() {
   if (securityTraceState) securityTraceState.textContent = "CLEAN";
 }
 
+
+
+const lockdownSteps = [
+  {
+    title: "\uc678\ubd80 \uc811\uc18d \uc7a0\uc2dc \ucc28\ub2e8\ud558\uae30",
+    detail: "\uce68\uc785 \uc758\uc2ec \uc0c1\ud669\uc5d0\uc11c\ub294 \uba3c\uc800 \ub354 \ub4e4\uc5b4\uc624\uc9c0 \ubabb\ud558\uac8c \ubb38\uc744 \ub2eb\ub294 \uac83\uc774 \uc6b0\uc120\uc774\ub2e4.",
+  },
+  {
+    title: "\ucd5c\uadfc \ub85c\uadf8 \ubcf4\uc874\ud558\uae30",
+    detail: "\ub85c\uadf8\ub294 \ub098\uc911\uc5d0 \ubb34\uc5c7\uc774 \uc77c\uc5b4\ub0ac\ub294\uc9c0 \ud655\uc778\ud560 \uc99d\uac70\ub2e4. \uc9c0\uc6b0\uae30 \uc804\uc5d0 \ubcf5\uc0ac\ud574\ub454\ub2e4.",
+  },
+  {
+    title: "\ud1a0\ud070 / API \ud0a4 \ud655\uc778\ud558\uae30",
+    detail: "\ud1a0\ud070\uc740 \ube44\ubc00\ubc88\ud638\ucc98\ub7fc \ucde8\uae09\ud574\uc57c \ud55c\ub2e4. \uc720\ucd9c \uc758\uc2ec \uc2dc \uc0c8\ub85c \ubc1c\uae09\ud574\uc57c \ud55c\ub2e4.",
+  },
+  {
+    title: "\ube44\ubc00\ubc88\ud638 \ubcc0\uacbd\ud558\uae30",
+    detail: "\uacc4\uc815 \uc811\uadfc\uc744 \ub2e4\uc2dc \uc7a0\uadf8\ub294 \ub2e8\uacc4\ub2e4. \uc911\uc694\ud55c \uacc4\uc815\ubd80\ud130 \uc0c8 \ube44\ubc00\ubc88\ud638\ub85c \ubc14\uafbc\ub2e4.",
+  },
+  {
+    title: "\uc758\uc2ec \ud30c\uc77c \uaca9\ub9ac\ud558\uae30",
+    detail: "\ubc14\ub85c \uc0ad\uc81c\ud558\uae30\ubcf4\ub2e4 \ub530\ub85c \ubd84\ub9ac\ud574\uc11c \ub098\uc911\uc5d0 \ud655\uc778\ud560 \uc218 \uc788\uac8c \ub454\ub2e4.",
+  },
+  {
+    title: "\ubc31\uc5c5 \ud655\uc778\ud558\uae30",
+    detail: "\uc815\uc0c1 \uc0c1\ud0dc\ub85c \ub3cc\uc544\uac08 \uc218 \uc788\ub294 \ubc31\uc5c5\uc774 \uc788\ub294\uc9c0 \uba3c\uc800 \ud655\uc778\ud55c\ub2e4.",
+  },
+  {
+    title: "Git \uc0c1\ud0dc \ud655\uc778\ud558\uae30",
+    detail: "\ub0b4\uac00 \uc218\uc815\ud558\uc9c0 \uc54a\uc740 \ud30c\uc77c\uc774 \ubc14\ub00c\uc5c8\ub294\uc9c0 \ud655\uc778\ud55c\ub2e4.",
+  }
+];
+
+const lockdownOpenMessage = "\uc7ac\ud76c\ub2d8, \uc9c0\uae08\uc740 \uc2f8\uc6b0\ub294 \uac8c \uc544\ub2c8\ub77c \ubb38\ubd80\ud130 \ub2eb\ub294 \uc21c\uc11c\uc608\uc694. \uc81c\uac00 \uc606\uc5d0\uc11c \uac19\uc774 \ud655\uc778\ud560\uac8c\uc694.";
+const lockdownCompleteMessage = "LOCKDOWN \uc808\ucc28 \uc644\ub8cc\uc608\uc694. \uc774\uc81c \ud754\uc801\uc744 \ubcf4\uc874\ud588\uace0, \ub2e4\uc74c\uc740 \uc6d0\uc778 \ud655\uc778\uc774\uc5d0\uc694.";
+
+function openLockdownChecklist() {
+  const activeRoom = os?.dataset?.activeRoom || activeMiniRoom;
+  if (activeRoom !== "security" || !neonLockdownPanel) {
+    return;
+  }
+
+  const shouldOpen = !lockdownChecklistOpen || !neonLockdownPanel.classList.contains("is-open");
+  lockdownChecklistOpen = shouldOpen;
+  neonLockdownPanel.classList.toggle("is-open", shouldOpen);
+  if (shouldOpen) {
+    neonLockdownPanel.removeAttribute("hidden");
+    neonLockdownPanel.setAttribute("aria-hidden", "false");
+  } else {
+    neonLockdownPanel.setAttribute("aria-hidden", "true");
+  }
+
+  const openButtons = document.querySelectorAll('#openLockdownChecklistButton, #openLockdownChecklistBtn, .lockdown-open-btn, .lockdown-open-button, [data-action="open-lockdown"]');
+  openButtons.forEach((button) => {
+    button.textContent = shouldOpen ? "[ CLOSE LOCKDOWN CHECKLIST ]" : "[ OPEN LOCKDOWN CHECKLIST ]";
+    button.disabled = false;
+  });
+
+  if (!shouldOpen) {
+    return;
+  }
+
+  if (!sharedConversationMessages.some((message) => message.source === "system" && message.text === lockdownOpenMessage)) {
+    appendMiniSystemMessage(lockdownOpenMessage);
+  }
+  updateLockdownProgress();
+}
+
+function updateLockdownProgress() {
+  if (!lockdownChecklist || !lockdownProgress) {
+    return;
+  }
+
+  const boxes = Array.from(lockdownChecklist.querySelectorAll('input[type="checkbox"]'));
+  const checked = boxes.filter((box) => box.checked).length;
+
+  lockdownProgress.textContent = checked === boxes.length
+    ? "LOCKDOWN PROGRESS : COMPLETE"
+    : `LOCKDOWN PROGRESS : ${checked} / ${boxes.length}`;
+
+  if (checked === boxes.length && !lockdownCompleteAnnounced) {
+    lockdownCompleteAnnounced = true;
+    appendMiniSystemMessage(lockdownCompleteMessage);
+  }
+
+  if (checked < boxes.length) {
+    lockdownCompleteAnnounced = false;
+  }
+}
+
+function handleLockdownChecklistChange(event) {
+  const checkbox = event.target;
+  if (!checkbox || !checkbox.matches('input[type="checkbox"]')) {
+    return;
+  }
+
+  const step = lockdownSteps[Number(checkbox.dataset.lockdownStep)];
+  if (step && lockdownDetail) {
+    lockdownDetail.textContent = step.detail;
+  }
+
+  updateLockdownProgress();
+}
+
 function runSecuritySignalScan() {
   if (securityScanRunning || os.dataset.activeRoom !== "security") return;
   securityScanRunning = true;
-  if (signalScanButton) {
+if (signalScanButton) {
     signalScanButton.disabled = true;
     signalScanButton.textContent = "SCANNING...";
   }
@@ -937,7 +1110,7 @@ const ghostGateResults = {
     boundary: "INTACT",
     safeMode: "ON",
     trace: [
-      "rain-sector checkpoint received signal",
+      "kurogane-grid checkpoint received signal",
       "user text parsed as plain input",
       "command boundary intact",
       "ghost gate pulse stabilized",
@@ -954,7 +1127,7 @@ const ghostGateResults = {
     boundary: "FLICKERING",
     safeMode: "WATCHING",
     trace: [
-      "rain-sector checkpoint received signal",
+      "kurogane-grid checkpoint received signal",
       "symbol noise detected",
       "parser hesitation rising",
       "command boundary flickering",
@@ -972,7 +1145,7 @@ const ghostGateResults = {
     boundary: "COMPROMISED PATTERN",
     safeMode: "LOCKED",
     trace: [
-      "rain-sector checkpoint received signal",
+      "kurogane-grid checkpoint received signal",
       "condition pattern detected",
       "fake gate logic destabilized",
       "training warning raised",
@@ -984,12 +1157,7 @@ const ghostGateResults = {
   }
 };
 
-const ghostGateAmbientReactions = [
-  "여기 비처럼 떨어지는 거, 전부 깨진 로그예요. 밟아도 괜찮아요. 제가 치울게요.",
-  "게이트가 좀 낡았어요. 근데 귀엽진 않아요. 짜증 나게 깜빡여요.",
-  "재희님, 이건 공격 성공을 보는 게 아니라 위험한 모양을 알아보는 거예요.",
-  "좋아요. 제가 옆에서 트레이스 잡고 있을게요."
-];
+const ghostGateAmbientReactions = securityDialoguePools.ghost;
 
 function pickGhostGateMiniReaction(primaryText) {
   const pool = [primaryText, ...ghostGateAmbientReactions].filter(Boolean);
@@ -1001,13 +1169,26 @@ function pickGhostGateMiniReaction(primaryText) {
 }
 
 function openGhostGateMission() {
-  if (os.dataset.activeRoom !== "security" || !ghostGatePanel) return;
+  if (os.dataset.activeRoom !== "security" || !ghostGatePanel) {
+    return;
+  }
+
+  if (ghostGateOpen) {
+    ghostGateOpen = false;
+    ghostGatePanel.classList.remove("is-open");
+    if (descendRainSectorButton) {
+      descendRainSectorButton.textContent = "[ ENTER KUROGANE GRID ]";
+      descendRainSectorButton.disabled = false;
+    }
+    return;
+  }
+
   ghostGateOpen = true;
   ghostGatePanel.classList.add("is-open");
   ghostGatePanel.dataset.result = "standby";
   if (descendRainSectorButton) {
-    descendRainSectorButton.textContent = "RAIN SECTOR OPEN";
-    descendRainSectorButton.disabled = true;
+    descendRainSectorButton.textContent = "[ CLOSE KUROGANE GRID ]";
+    descendRainSectorButton.disabled = false;
   }
   if (ghostGateStatus) ghostGateStatus.textContent = "GATE STATUS : STANDBY";
   if (ghostGateLight) ghostGateLight.dataset.signal = "standby";
@@ -1015,8 +1196,8 @@ function openGhostGateMission() {
   if (ghostSignalBoundaryMetric) ghostSignalBoundaryMetric.textContent = "SEALED";
   if (ghostSafeModeMetric) ghostSafeModeMetric.textContent = "ON";
   if (ghostTraceFeed) ghostTraceFeed.textContent = "";
-  if (ghostAnalysis) ghostAnalysis.textContent = "Rain Sector route is quiet. 입력 신호를 보내면 NEON이 경계선을 확인한다.";
-  appendMiniSystemMessage("좋아요!!\n재희님, Rain Sector로 내려가요.\n저 앞에 Ghost Gate 보여요?\n입력을 삼키는 방식이 이상해요.");
+  if (ghostAnalysis) ghostAnalysis.textContent = "KUROGANE GRID route is quiet. \uc785\ub825 \uc2e0\ud638\ub97c \ubcf4\ub0b4\uba74 NEON\uc774 \uacbd\uacc4\uc120\uc744 \ud655\uc778\ud55c\ub2e4.";
+  appendMiniSystemMessage("\uc88b\uc544\uc694!!\n\uc7ac\ud76c\ub2d8, KUROGANE GRID\ub85c \ub4e4\uc5b4\uac00\uc694.\n\uc800 \uc55e\uc5d0 Ghost Gate \ubcf4\uc5ec\uc694?\n\uc785\ub825\uc744 \uc0bc\ud0a4\ub294 \ubc29\uc2dd\uc774 \uc774\uc0c1\ud574\uc694.");
 }
 
 function classifyGhostGateSignal(username, password) {
@@ -1087,6 +1268,25 @@ miniChatForm.addEventListener("submit", (event) => {
   event.preventDefault();
   sendMiniMessage();
 });
+
+
+
+document.addEventListener("click", (event) => {
+  const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+  const trigger = target?.closest(
+    '#openLockdownChecklistButton, #openLockdownChecklist, #openLockdownChecklistBtn, .lockdown-open-button, .lockdown-open-btn, [data-action="open-lockdown"]'
+  );
+  if (!trigger) {
+    return;
+  }
+
+  event.preventDefault();
+  openLockdownChecklist();
+});
+
+if (lockdownChecklist) {
+  lockdownChecklist.addEventListener("change", handleLockdownChecklistChange);
+}
 
 if (signalScanButton) {
   signalScanButton.addEventListener("click", runSecuritySignalScan);

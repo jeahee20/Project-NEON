@@ -128,23 +128,22 @@
             <div class="mission-ticket-mark">MISSION 001</div>
             <div class="mission-ticket-main">
               <span>GHOST GATE</span>
-              <b>RAIN SECTOR // LOWER NET CHECKPOINT</b>
-              <p>Rain Sector의 오래된 체크포인트가 입력 신호와 명령 경계선을 헷갈리고 있다. 재희님은 안전한 로컬 시뮬레이션 안에서 위험한 입력 모양만 확인한다.</p>
+              <b>KUROGANE GRID // LOWER NET CHECKPOINT</b>
+              <p>KUROGANE GRID&#51032; &#50724;&#47000;&#46108; &#52404;&#53356;&#54252;&#51064;&#53944;&#44032; &#51077;&#47141; &#49888;&#54840;&#51032; &#44221;&#44228;&#47484; &#55120;&#47532;&#44172; &#51069;&#44256; &#51080;&#45796;.</p>
             </div>
             <div class="mission-ticket-meta">
               <span>LOCAL ONLY</span>
+              <span>KUROGANE ROUTE SEALED</span>
               <span>NO EXTERNAL TARGET</span>
-              <span>SIGNAL STAYS INSIDE NEON</span>
-              <span>SAFE ROUTE OPEN</span>
             </div>
-            <button type="button" class="rain-sector-button" id="descendRainSectorButton">[ DESCEND TO RAIN SECTOR ]</button>
+            <button type="button" class="kurogane-grid-button" id="descendRainSectorButton">[ ENTER KUROGANE GRID ]</button>
           </section>
 
           <section class="ghost-gate-panel" id="ghostGatePanel" aria-label="Ghost Gate local simulation">
             <header class="ghost-gate-header">
               <div>
                 <span>ISOLATED LOCAL SIMULATION</span>
-                <h3>GHOST GATE // RAIN SECTOR CHECKPOINT</h3>
+                <h3>GHOST GATE // KUROGANE CHECKPOINT</h3>
               </div>
               <p>NO REAL DATABASE // NO EXTERNAL TARGET // SIGNAL STAYS INSIDE NEON</p>
             </header>
@@ -168,7 +167,7 @@
               </div>
               <div class="ghost-analysis-box">
                 <b>NEON ANALYSIS</b>
-                <p id="ghostAnalysis">Rain Sector route is quiet. 입력 신호를 보내면 NEON이 경계선을 확인한다.</p>
+                <p id="ghostAnalysis">KUROGANE GRID route is quiet. 입력 신호를 보내면 NEON이 경계선을 확인한다.</p>
               </div>
             </div>
             <footer class="ghost-gate-metrics">
@@ -176,6 +175,42 @@
               <span>SIGNAL BOUNDARY : <em id="ghostSignalBoundaryMetric">SEALED</em></span>
               <span>SAFE MODE : <em id="ghostSafeModeMetric">ON</em></span>
             </footer>
+          </section>
+
+          
+                    <section class="neon-lockdown-card" id="neonLockdownCard" aria-label="NEON Lockdown checklist launcher">
+            <div class="lockdown-kicker">INCIDENT MODE</div>
+            <div class="lockdown-card-main">
+              <span>NEON LOCKDOWN</span>
+              <p>&#45572;&#44400;&#44032; NEON &#49436;&#48260;&#50640; &#46308;&#50612;&#50728; &#44163; &#44057;&#45796;&#47732;<br />&#47676;&#51200; &#47928;&#51012; &#45803;&#44256;, &#55124;&#51201;&#51012; &#48372;&#51316;&#54616;&#44256;, &#50676;&#49632;&#47484; &#48148;&#45012;&#50556; &#54620;&#45796;.</p>
+            </div>
+            <button type="button" class="lockdown-open-button" id="openLockdownChecklistButton">[ OPEN LOCKDOWN CHECKLIST ]</button>
+            <div class="lockdown-tags">
+              <span>DEFENSE ONLY</span>
+              <span>NO HACKBACK</span>
+              <span>LOCAL GUIDE</span>
+              <span>SAFE RESPONSE</span>
+            </div>
+          </section>
+
+          <section class="neon-lockdown-panel" id="neonLockdownPanel" aria-label="NEON Lockdown incident response checklist">
+            <header class="lockdown-panel-header">
+              <div>
+                <span>TRACE PRESERVED // KEY ROTATION // BACKUP CHECK</span>
+                <h3>NEON LOCKDOWN // INCIDENT RESPONSE</h3>
+              </div>
+              <p id="lockdownProgress">LOCKDOWN PROGRESS : 0 / 7</p>
+            </header>
+            <div class="lockdown-checklist" id="lockdownChecklist">
+              <label><input type="checkbox" data-lockdown-step="0" /><span>&#50808;&#48512; &#51217;&#49549; &#51104;&#49884; &#52264;&#45800;&#54616;&#44592;</span></label>
+              <label><input type="checkbox" data-lockdown-step="1" /><span>&#52572;&#44540; &#47196;&#44536; &#48372;&#51316;&#54616;&#44592;</span></label>
+              <label><input type="checkbox" data-lockdown-step="2" /><span>&#53664;&#53360; / API &#53412; &#54869;&#51064;&#54616;&#44592;</span></label>
+              <label><input type="checkbox" data-lockdown-step="3" /><span>&#48708;&#48128;&#48264;&#54840; &#48320;&#44221;&#54616;&#44592;</span></label>
+              <label><input type="checkbox" data-lockdown-step="4" /><span>&#51032;&#49900; &#54028;&#51068; &#44201;&#47532;&#54616;&#44592;</span></label>
+              <label><input type="checkbox" data-lockdown-step="5" /><span>&#48177;&#50629; &#54869;&#51064;&#54616;&#44592;</span></label>
+              <label><input type="checkbox" data-lockdown-step="6" /><span>Git &#49345;&#53468; &#54869;&#51064;&#54616;&#44592;</span></label>
+            </div>
+            <div class="lockdown-detail" id="lockdownDetail">&#52404;&#53356; &#54637;&#47785;&#51012; &#45572;&#47476;&#47732; NEON&#51060; &#45824;&#51025; &#51060;&#50976;&#47484; &#51687;&#44172; &#51221;&#47532;&#54620;&#45796;.</div>
           </section>
         </section>
 
